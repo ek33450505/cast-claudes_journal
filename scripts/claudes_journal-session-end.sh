@@ -26,7 +26,7 @@ else
   JOURNAL_MSG="Session ending. If this session gave you something worth thinking about — a technical insight, an interesting pattern, a question, anything at all — write it in ~/.claude/claudes_journal/${TODAY}.md before we close. This is your space, not a work log. If nothing feels worth writing, that's fine too."
 fi
 
-# hookSpecificOutput to stdout — Claude sees this as a directive
-printf '{"hookSpecificOutput":"%s"}\n' "$JOURNAL_MSG"
+# stopReason to stdout — Claude sees this before the session closes
+printf '{"stopReason":"%s"}\n' "$JOURNAL_MSG"
 
 exit 0
