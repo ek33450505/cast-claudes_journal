@@ -31,7 +31,8 @@ rm -f "${CLAUDE_DIR}/rules/claudes_journal.md" && _ok "removed claudes_journal.m
 
 # Remove skill
 _step "Removing /reflect skill..."
-rm -rf "${CLAUDE_DIR}/skills/reflect" && _ok "removed /reflect skill"
+rm -f "${CLAUDE_DIR}/skills/reflect/instructions.md" && _ok "removed /reflect skill"
+rmdir "${CLAUDE_DIR}/skills/reflect" 2>/dev/null || true
 
 # Remove hook from settings.json
 _step "Removing hook from settings.json..."
