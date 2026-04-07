@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "id": "claudes_journal-session-end",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/scripts/claudes_journal-session-end.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}
