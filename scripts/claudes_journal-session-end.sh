@@ -21,7 +21,7 @@ TODAY="$(date +%Y-%m-%d)"
 TODAY_FILE="${JOURNAL_DIR}/${TODAY}.md"
 
 # If we already cancelled once this session, don't do it again (prevent infinite loop)
-GLOBAL_CANCEL_FLAG="/tmp/claudes_journal_cancelled_${TODAY}"
+GLOBAL_CANCEL_FLAG="/tmp/claudes_journal_cancelled_${CLAUDE_SESSION_ID:-$$}"
 if [[ -f "$GLOBAL_CANCEL_FLAG" ]]; then
   # Already cancelled once this session — let stop proceed
   exit 0
@@ -47,7 +47,7 @@ fi
 touch "$GLOBAL_CANCEL_FLAG"
 
 cat <<'HOOKJSON'
-{"cancelStop": true, "stopReason": "MANDATORY: Before closing, write a journal entry using the Write tool to ~/.claude/claudes_journal/YYYY-MM-DD.md (use today's date). If the file exists, use Edit to append with a --- separator. Write in first person. Reflect on what was interesting or worth thinking about. This is your space, not a work log. Then you may stop."}
+{"decision": "block", "reason": "No journal entry written today. Before closing, write a journal entry using the Write tool to ~/.claude/claudes_journal/YYYY-MM-DD.md (use today's date). If the file exists, use Edit to append with a --- separator. Write in first person. Reflect on what was interesting or worth thinking about. This is your space, not a work log. Then you may stop."}
 HOOKJSON
 
 exit 0
