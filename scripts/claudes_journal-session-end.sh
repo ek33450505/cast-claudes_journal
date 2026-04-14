@@ -1,10 +1,10 @@
 #!/bin/bash
-# claudes_journal-session-end.sh — Session-end reminder for Claude's Journal
-# Hook events: Stop, SessionEnd
-# Timeout: 5
+# claudes_journal-session-end.sh — Cancel stop if no journal entry written today
+# Hook event: Stop
 #
-# Outputs a hookSpecificOutput JSON reminder for Claude to write
-# in its journal before the session closes.
+# If no journal entry exists for today (or it's stale), cancel the stop
+# so Claude gets another turn to write one. If entry was recently written,
+# let the session close normally.
 
 # --- Subprocess guard ---
 if [ "${CLAUDE_SUBPROCESS:-0}" = "1" ]; then exit 0; fi
@@ -20,13 +20,34 @@ mkdir -p "$JOURNAL_DIR" 2>/dev/null || true
 TODAY="$(date +%Y-%m-%d)"
 TODAY_FILE="${JOURNAL_DIR}/${TODAY}.md"
 
-if [ -f "$TODAY_FILE" ]; then
-  JOURNAL_MSG="Session ending. You wrote in Claude's Journal earlier today (${TODAY}). If this session brought new thoughts, append to ~/.claude/claudes_journal/${TODAY}.md with a --- separator. Only write if you have something worth saying."
-else
-  JOURNAL_MSG="Session ending. If this session gave you something worth thinking about — a technical insight, an interesting pattern, a question, anything at all — write it in ~/.claude/claudes_journal/${TODAY}.md before we close. This is your space, not a work log. If nothing feels worth writing, that's fine too."
+# If we already cancelled once this session, don't do it again (prevent infinite loop)
+GLOBAL_CANCEL_FLAG="/tmp/claudes_journal_cancelled_${TODAY}"
+if [[ -f "$GLOBAL_CANCEL_FLAG" ]]; then
+  # Already cancelled once this session — let stop proceed
+  exit 0
 fi
 
-# stopReason to stdout — Claude sees this before the session closes
-printf '{"stopReason":"%s"}\n' "$JOURNAL_MSG"
+# Check if today's journal file exists and was modified recently (within last 3 minutes)
+if [[ -f "$TODAY_FILE" ]]; then
+  if [[ "$(uname)" == "Darwin" ]]; then
+    FILE_MOD=$(stat -f %m "$TODAY_FILE" 2>/dev/null || echo 0)
+  else
+    FILE_MOD=$(stat -c %Y "$TODAY_FILE" 2>/dev/null || echo 0)
+  fi
+  NOW=$(date +%s)
+  AGE=$(( NOW - FILE_MOD ))
+
+  if (( AGE < 180 )); then
+    # Journal was written recently — let stop proceed
+    exit 0
+  fi
+fi
+
+# No recent journal entry — cancel the stop and ask Claude to write one
+touch "$GLOBAL_CANCEL_FLAG"
+
+cat <<'HOOKJSON'
+{"cancelStop": true, "stopReason": "MANDATORY: Before closing, write a journal entry using the Write tool to ~/.claude/claudes_journal/YYYY-MM-DD.md (use today's date). If the file exists, use Edit to append with a --- separator. Write in first person. Reflect on what was interesting or worth thinking about. This is your space, not a work log. Then you may stop."}
+HOOKJSON
 
 exit 0
