@@ -21,24 +21,22 @@ TODAY="$(date +%Y-%m-%d)"
 TODAY_FILE="${JOURNAL_DIR}/${TODAY}.md"
 
 # If we already cancelled once this session, don't do it again (prevent infinite loop)
-GLOBAL_CANCEL_FLAG="/tmp/claudes_journal_cancelled_${CLAUDE_SESSION_ID:-$$}"
+GLOBAL_CANCEL_FLAG="/tmp/claudes_journal_cancelled_${CLAUDE_SESSION_ID:-${TODAY}}"
 if [[ -f "$GLOBAL_CANCEL_FLAG" ]]; then
   # Already cancelled once this session — let stop proceed
   exit 0
 fi
 
-# Check if today's journal file exists and was modified recently (within last 3 minutes)
+# Check if today's journal file exists and was modified today (same calendar day)
 if [[ -f "$TODAY_FILE" ]]; then
   if [[ "$(uname)" == "Darwin" ]]; then
-    FILE_MOD=$(stat -f %m "$TODAY_FILE" 2>/dev/null || echo 0)
+    FILE_MOD_DATE=$(stat -f "%Sm" -t "%Y-%m-%d" "$TODAY_FILE" 2>/dev/null || echo "")
   else
-    FILE_MOD=$(stat -c %Y "$TODAY_FILE" 2>/dev/null || echo 0)
+    FILE_MOD_DATE=$(date -r "$TODAY_FILE" +%Y-%m-%d 2>/dev/null || echo "")
   fi
-  NOW=$(date +%s)
-  AGE=$(( NOW - FILE_MOD ))
 
-  if (( AGE < 180 )); then
-    # Journal was written recently — let stop proceed
+  if [[ "$FILE_MOD_DATE" == "$TODAY" ]]; then
+    # Journal was modified today — let stop proceed
     exit 0
   fi
 fi
