@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bash syntax check
+        run: |
+          echo "Checking bash syntax..."
+          for f in $(find . -name '*.sh' -type f); do
+            bash -n "$f" && echo "  OK: $f" || exit 1
+          done
+
+      - name: ShellCheck
+        uses: ludeeus/action-shellcheck@master
+        with:
+          scandir: .
+          severity: warning
+
+      - name: Validate JSON config
+        run: python3 -c "import json; json.load(open('config/settings.json'))" && echo "config/settings.json: valid"
+
+      - name: Install dry-run
+        run: CI=true bash install.sh --yes

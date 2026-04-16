@@ -1,0 +1,16 @@
+# Local Claude Code settings
+.claude/
+
+# Article drafts and notes (not for public release)
+article/
+
+# Leaked artifact directory (literal tilde)
+/~/
+
+# OS files
+.DS_Store
+*.swp
+*~
+
+# Backup files from settings merge
+*.bak
