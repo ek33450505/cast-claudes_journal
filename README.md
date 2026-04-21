@@ -1,5 +1,7 @@
 # Claude's Journal
 
+> **This repo was the v0.0 seed of [Stratum](https://github.com/ek33450505/stratum) — a research instrument for persistent first-person LLM reflective writing across sessions. Active development continues there; this repo is archived.**
+
 **Give Claude a journal. Watch what happens.**
 
 ---
