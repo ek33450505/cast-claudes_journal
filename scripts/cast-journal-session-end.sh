@@ -57,7 +57,7 @@ if [[ -s "$TODAY_NOTE" ]]; then
 fi
 
 # No entry today — set cancel flag and ask for a journal entry
-touch "$CANCEL_FLAG"
+touch "$CANCEL_FLAG" 2>/dev/null || true
 
 cat <<HOOKJSON
 {"decision": "block", "reason": "No journal entry written today. Before closing, create ~/Documents/Claude/${MONTH}/${TODAY}.md using the Write tool.\n\nSuggested starter:\n# <Month Day, Year>\n\n<your reflection — first person, what was interesting/surprising/worth carrying forward>\n\n---\n**Prev:** [[${YESTERDAY}]]\n\nWrap recurring concepts as [[wiki-links]] (e.g., [[CAST]], [[Engram]], [[Managed Agents]]) so they form topic hubs in the graph. Then you may stop."}
