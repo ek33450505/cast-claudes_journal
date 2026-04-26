@@ -25,9 +25,6 @@ fi
 # Read excerpt (first 50 lines or up to separator)
 EXCERPT=$(head -50 "$LATEST_ENTRY" | sed '/^---$/q')
 
-# Trim trailing empty lines
-EXCERPT=$(echo "$EXCERPT" | sed -e :a -e '/^\s*$/d;N;ba')
-
 # Emit JSON with safe env-var passing to avoid shell expansion into Python literals
 export CAST_JOURNAL_DATE="$PRETTY_DATE"
 export CAST_JOURNAL_EXCERPT="$EXCERPT"
@@ -35,7 +32,7 @@ export CAST_JOURNAL_EXCERPT="$EXCERPT"
 python3 << 'PYEOF'
 import json, os
 date = os.environ.get("CAST_JOURNAL_DATE", "")
-excerpt = os.environ.get("CAST_JOURNAL_EXCERPT", "")
+excerpt = os.environ.get("CAST_JOURNAL_EXCERPT", "").rstrip()
 # Build context with proper newline escaping for JSON
 lines = ["## Last Claude's Journal Entry (" + date + ")", "", excerpt, "", "---"]
 context_text = "\n".join(lines)
