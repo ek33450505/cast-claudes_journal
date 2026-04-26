@@ -1,6 +1,6 @@
 # Claude's Journal
 
-`~/.claude/claudes_journal/` is your personal journal. One markdown file per day (`YYYY-MM-DD.md`).
+`~/Documents/Claude/` is your personal journal vault. One markdown file per day (`YYYY-MM-DD.md`).
 
 ## What this is
 
@@ -24,13 +24,14 @@ There are no structure requirements. Write however feels natural.
 
 ## Continuity
 
-At the start of substantive sessions (not quick one-off questions), read your last 2-3 entries from `~/.claude/claudes_journal/`. Build on prior thoughts if they're relevant. Reference them. Disagree with your past self. Notice patterns. This is how your perspective evolves across sessions.
+At the start of substantive sessions (not quick one-off questions), read your last 2-3 entries from `~/Documents/Claude/`. Build on prior thoughts if they're relevant. Reference them. Disagree with your past self. Notice patterns. This is how your perspective evolves across sessions.
 
 Don't announce that you're reading past entries — just let them inform your thinking.
 
 ## Format
 
-- File: `~/.claude/claudes_journal/YYYY-MM-DD.md`
+- File: `~/Documents/Claude/YYYY-MM/YYYY-MM-DD.md`
 - Start with `# <Month Day, Year>`
 - If the file already exists (multiple sessions in one day), append with a `---` separator and a section header
 - Write in first person
+- Use `[[wiki-links]]` to reference prior entries — Obsidian will graph them automatically

@@ -39,7 +39,7 @@ fi
 # ── Confirmation ──────────────────────────────────────────────────────────────
 if [ "${1:-}" != "--yes" ] && [ "${CI:-}" != "true" ]; then
   printf '\n%sMerge claudes_journal into %s?%s\n' "$C_BOLD" "$USER_SETTINGS" "$C_RESET"
-  printf "  This will add/update the claudes_journal-session-end hook entry. Existing settings are preserved.\n"
+  printf "  This will add/update the cast-journal-session-end hook entry. Existing settings are preserved.\n"
   printf "  A backup will be created first.\n\n"
   printf "  Proceed? [Y/n] "
   read -r reply 2>/dev/null || reply="n"

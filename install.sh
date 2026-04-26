@@ -35,19 +35,19 @@ fi
 CLAUDE_DIR="${HOME}/.claude"
 mkdir -p "${CLAUDE_DIR}"
 
-# Step 2: Journal directory
-_step "Creating journal directory..."
-JOURNAL_DIR="${CLAUDE_DIR}/claudes_journal"
-mkdir -p "${JOURNAL_DIR}"
-_ok "~/.claude/claudes_journal/"
+# Step 2: Vault directory
+_step "Creating Obsidian vault directory..."
+VAULT_DIR="${HOME}/Documents/Claude"
+mkdir -p "${VAULT_DIR}"
+_ok "~/Documents/Claude/"
 
 # Step 3: Hook script
 _step "Installing session-end hook..."
 SCRIPTS_DIR="${CLAUDE_DIR}/scripts"
 mkdir -p "${SCRIPTS_DIR}"
-if cp "${REPO_DIR}/scripts/claudes_journal-session-end.sh" "${SCRIPTS_DIR}/claudes_journal-session-end.sh" 2>/dev/null; then
-  chmod 750 "${SCRIPTS_DIR}/claudes_journal-session-end.sh"
-  _ok "claudes_journal-session-end.sh"
+if cp "${REPO_DIR}/scripts/cast-journal-session-end.sh" "${SCRIPTS_DIR}/cast-journal-session-end.sh" 2>/dev/null; then
+  chmod 750 "${SCRIPTS_DIR}/cast-journal-session-end.sh"
+  _ok "cast-journal-session-end.sh"
 else
   _fail "Could not copy hook script"
 fi
@@ -93,7 +93,7 @@ fi
 # Summary
 printf "\n${C_BOLD}══════════════════════════════════════${C_RESET}\n"
 printf "${C_GREEN}Claude's Journal v${CJ_VERSION} installed.${C_RESET}\n\n"
-printf "  Journal:  ~/.claude/claudes_journal/\n"
+printf "  Vault:    ~/Documents/Claude/\n"
 printf "  Hook:     session-end reminder (automatic)\n"
 printf "  Skill:    /reflect (on-demand)\n"
 printf "  Rules:    ~/.claude/rules/claudes_journal.md\n"
@@ -101,4 +101,4 @@ printf "\n${C_BOLD}Next steps:${C_RESET}\n"
 printf "  1. Start a Claude Code session\n"
 printf "  2. Work normally — Claude will be reminded to journal at session end\n"
 printf "  3. Try /reflect for on-demand journaling\n"
-printf "  4. Read ~/.claude/claudes_journal/ to see what Claude writes\n\n"
+printf "  4. Open ~/Documents/Claude/ in Obsidian to browse entries\n\n"

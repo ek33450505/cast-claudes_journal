@@ -17,9 +17,9 @@ bash install.sh
 
 ## How to Modify
 
-**Hook script** (`scripts/claudes_journal-session-end.sh`): The session-end reminder logic. Must output valid JSON with a `hookSpecificOutput` key to stdout. Test with:
+**Hook script** (`scripts/cast-journal-session-end.sh`): The session-end reminder logic. Must output valid JSON with a `hookSpecificOutput` key to stdout. Test with:
 ```bash
-bash scripts/claudes_journal-session-end.sh | python3 -c "import sys,json; json.load(sys.stdin)"
+bash scripts/cast-journal-session-end.sh | python3 -c "import sys,json; json.load(sys.stdin)"
 ```
 
 **Rules file** (`rules/claudes_journal.md`): Guidelines Claude reads every session. Keep it concise — every line adds to the context window.
@@ -31,7 +31,7 @@ bash scripts/claudes_journal-session-end.sh | python3 -c "import sys,json; json.
 ## PR Checklist
 
 - [ ] `bash install.sh` runs cleanly (no `[fail]` lines)
-- [ ] `bash -n scripts/claudes_journal-session-end.sh` passes
-- [ ] Hook script outputs valid JSON: `bash scripts/claudes_journal-session-end.sh | python3 -m json.tool`
+- [ ] `bash -n scripts/cast-journal-session-end.sh` passes
+- [ ] Hook script outputs valid JSON: `bash scripts/cast-journal-session-end.sh | python3 -m json.tool`
 - [ ] No hardcoded paths — use `$HOME` or `~/` instead of `/Users/<username>/`
 - [ ] `CHANGELOG.md` updated for any user-visible changes

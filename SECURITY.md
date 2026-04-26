@@ -17,7 +17,7 @@ Report privately using [GitHub Security Advisories](https://github.com/ek3345050
 
 - **Version** — output of `cat ~/Projects/personal/cast-claudes_journal/VERSION`
 - **Operating system** — macOS version (e.g., `sw_vers`)
-- **Which file** — e.g., `install.sh`, `scripts/claudes_journal-session-end.sh`
+- **Which file** — e.g., `install.sh`, `scripts/cast-journal-session-end.sh`
 - **Steps to reproduce** — minimal, clear reproduction steps
 - **Impact** — what an attacker could do
 

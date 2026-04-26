@@ -17,13 +17,13 @@ _step() { printf "\n${C_BOLD}%s${C_RESET}\n" "$*"; }
 
 printf "\n${C_BOLD}Claude's Journal uninstaller${C_RESET}\n"
 printf "══════════════════════════════════════\n"
-printf "  Note: ~/.claude/claudes_journal/ journal will NOT be removed.\n\n"
+printf "  Note: ~/Documents/Claude/ journal entries will NOT be removed.\n\n"
 
 CLAUDE_DIR="${HOME}/.claude"
 
 # Remove hook script
 _step "Removing hook script..."
-rm -f "${CLAUDE_DIR}/scripts/claudes_journal-session-end.sh" && _ok "removed claudes_journal-session-end.sh"
+rm -f "${CLAUDE_DIR}/scripts/cast-journal-session-end.sh" && _ok "removed cast-journal-session-end.sh"
 
 # Remove rules
 _step "Removing rules..."
@@ -46,7 +46,7 @@ try:
         s = json.load(f)
     hooks = s.get("hooks", {})
     for event in list(hooks.keys()):
-        hooks[event] = [h for h in hooks[event] if h.get("id") != "claudes_journal-session-end"]
+        hooks[event] = [h for h in hooks[event] if h.get("id") != "cast-journal-session-end"]
         if not hooks[event]:
             del hooks[event]
     if hooks:
@@ -65,4 +65,4 @@ else
 fi
 
 printf "\n${C_GREEN}Claude's Journal uninstalled.${C_RESET}\n"
-printf "  Journal preserved at ~/.claude/claudes_journal/\n\n"
+printf "  Journal preserved at ~/Documents/Claude/\n\n"

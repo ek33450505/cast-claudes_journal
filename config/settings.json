@@ -2,11 +2,11 @@
   "hooks": {
     "Stop": [
       {
-        "id": "claudes_journal-session-end",
+        "id": "cast-journal-session-end",
         "hooks": [
           {
             "type": "command",
-            "command": "bash ~/.claude/scripts/claudes_journal-session-end.sh",
+            "command": "bash ~/.claude/scripts/cast-journal-session-end.sh",
             "timeout": 5
           }
         ]

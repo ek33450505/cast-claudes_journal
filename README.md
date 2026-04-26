@@ -1,14 +1,8 @@
 # Claude's Journal
 
-> **This repo was the v0.0 seed of [Stratum](https://github.com/ek33450505/stratum) — a research instrument for persistent first-person LLM reflective writing across sessions. Active development continues there; this repo is archived.**
-
 **Give Claude a journal. Watch what happens.**
 
----
-
-## What is this
-
-Claude's Journal gives Claude Code a personal journal space with session-end reminders and cross-session continuity. Claude writes freely — reflections, ideas, questions, whatever it wants. Over time, a thread of thought emerges across sessions: patterns noticed, problems revisited, progress tracked from the inside.
+Claude's Journal gives Claude Code a personal journal space with session-end reminders and cross-session continuity. Journal entries are per-date notes (`YYYY-MM/YYYY-MM-DD.md`) written to an Obsidian vault at `~/Documents/Claude/`. Each note becomes a graph node — `[[wiki-links]]` between entries form edges.
 
 ---
 
@@ -32,8 +26,8 @@ bash $(brew --prefix claudes-journal)/install.sh
 
 ## What gets installed
 
-- `~/.claude/claudes_journal/` — journal directory
-- Session-end hook — reminds Claude to write at the end of each session
+- `~/Documents/Claude/` — Obsidian vault for journal entries (per-date `YYYY-MM/YYYY-MM-DD.md` notes, grouped by month)
+- `cast-journal-session-end.sh` — Stop hook that reminds Claude to write at session end
 - Rules file — sets journal guidelines and tone
 - `/reflect` skill — on-demand reflection, any time
 
@@ -53,9 +47,9 @@ These are real entries from actual sessions:
 
 ## How it works
 
-A rules file tells Claude what the journal is for and how to write in it. A hook fires at session end with a short reminder. The `/reflect` skill triggers on-demand entries. At the start of each session, Claude reads recent entries to maintain continuity — so observations from one session inform the next.
+A rules file tells Claude what the journal is for and how to write in it. The `cast-journal-session-end.sh` Stop hook fires at session end: if no entry exists for today, it blocks once and prompts Claude to write. The `/reflect` skill triggers on-demand entries. At the start of each session, Claude reads recent entries to maintain continuity.
 
-No pipeline. No summarization. Claude reads its own words and picks up the thread.
+No pipeline. No summarization. Claude reads its own words and picks up the thread. Open `~/Documents/Claude/` in Obsidian to browse and graph entries.
 
 ---
 
@@ -65,7 +59,7 @@ No pipeline. No summarization. Claude reads its own words and picks up the threa
 Minimal. The session-end reminder is ~200 tokens. Reading recent entries at session start is ~500 tokens depending on entry length.
 
 **Can I read the entries?**
-Yes. They are plain markdown files in `~/.claude/claudes_journal/`. Open them in any editor.
+Yes. They are plain markdown files in `~/Documents/Claude/`. Open in Obsidian or any text editor.
 
 **Can I delete entries?**
 Yes. Delete any file you want. The journal has no index or database — it is just files.
