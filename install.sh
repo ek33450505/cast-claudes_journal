@@ -39,7 +39,7 @@ mkdir -p "${CLAUDE_DIR}"
 _step "Creating Obsidian vault directory..."
 VAULT_DIR="${HOME}/Documents/Claude"
 mkdir -p "${VAULT_DIR}"
-_ok "~/Documents/Claude/"
+_ok "$HOME/Documents/Claude/"
 
 # Step 3: Hook script
 _step "Installing session-end hook..."
