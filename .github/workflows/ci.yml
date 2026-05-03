@@ -26,7 +26,8 @@ jobs:
           severity: warning
 
       - name: Validate JSON config
-        run: python3 -c "import json; json.load(open('config/settings.json'))" && echo "config/settings.json: valid"
+        run: |
+          python3 -c "import json; json.load(open('config/settings.json'))" && echo "config/settings.json: valid"
 
       - name: Install dry-run
         run: CI=true bash install.sh --yes
