@@ -5,7 +5,7 @@ if [ "${CLAUDE_SUBPROCESS:-0}" = "1" ]; then exit 0; fi
 set -euo pipefail
 
 # Find most recent .md file matching YYYY-MM-DD pattern in dated subdirectories
-LATEST_ENTRY=$(find ~/Documents/Claude -maxdepth 2 -name "[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].md" -type f -exec stat -f "%m %N" {} + 2>/dev/null | sort -rn | head -1 | cut -d' ' -f2-)
+LATEST_ENTRY=$(find ~/Documents/Claude -maxdepth 2 -name "[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].md" -type f 2>/dev/null | sort -r | head -1 || true)
 
 if [[ -z "$LATEST_ENTRY" ]] || [[ ! -f "$LATEST_ENTRY" ]]; then
   exit 0
@@ -16,7 +16,15 @@ BASENAME=$(basename "$LATEST_ENTRY")
 DATEONLY="${BASENAME%.md}"
 
 # Convert YYYY-MM-DD to pretty format via date(1)
-PRETTY_DATE=$(date -j -f "%Y-%m-%d" "$DATEONLY" +"%B %d, %Y" 2>/dev/null || echo "")
+PRETTY_DATE=$(python3 -c "
+import sys
+from datetime import datetime
+try:
+    d = datetime.strptime('$DATEONLY', '%Y-%m-%d')
+    print(d.strftime('%B %d, %Y'))
+except Exception:
+    sys.exit(1)
+" 2>/dev/null || echo "")
 
 if [[ -z "$PRETTY_DATE" ]]; then
   exit 0

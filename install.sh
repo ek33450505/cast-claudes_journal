@@ -52,6 +52,15 @@ else
   _fail "Could not copy hook script"
 fi
 
+# Step 3b: Session-start hook script
+_step "Installing session-start hook..."
+if cp "${REPO_DIR}/scripts/cast-session-start-journal.sh" "${SCRIPTS_DIR}/cast-session-start-journal.sh" 2>/dev/null; then
+  chmod 750 "${SCRIPTS_DIR}/cast-session-start-journal.sh"
+  _ok "cast-session-start-journal.sh"
+else
+  _fail "Could not copy session-start hook script"
+fi
+
 # Step 4: Rules
 _step "Installing rules..."
 RULES_DIR="${CLAUDE_DIR}/rules"
@@ -94,7 +103,7 @@ fi
 printf "\n${C_BOLD}══════════════════════════════════════${C_RESET}\n"
 printf "${C_GREEN}Claude's Journal v${CJ_VERSION} installed.${C_RESET}\n\n"
 printf "  Vault:    ~/Documents/Claude/\n"
-printf "  Hook:     session-end reminder (automatic)\n"
+printf "  Hooks:    session-end reminder + session-start context injection (automatic)\n"
 printf "  Skill:    /reflect (on-demand)\n"
 printf "  Rules:    ~/.claude/rules/claudes_journal.md\n"
 printf "\n${C_BOLD}Next steps:${C_RESET}\n"

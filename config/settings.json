@@ -11,6 +11,18 @@
           }
         ]
       }
+    ],
+    "SessionStart": [
+      {
+        "id": "cast-session-start-journal",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/scripts/cast-session-start-journal.sh",
+            "timeout": 3
+          }
+        ]
+      }
     ]
   }
 }
