@@ -20,23 +20,33 @@ teardown() {
 }
 
 # ---------------------------------------------------------------------------
-# Test 2: No vault dir → exits 0 silently
+# Test 2: No vault dir → exits 0 with fallback JSON
 # ---------------------------------------------------------------------------
-@test "no vault dir: exits 0 silently" {
+@test "no vault dir: exits 0 with fallback JSON" {
   # TMPDIR has no Documents/Claude at all
   run env HOME="$TMPDIR" bash "$SCRIPT"
   [ "$status" -eq 0 ]
-  [ -z "$output" ]
+  [ -n "$output" ]
+
+  # Must be valid JSON with warning systemMessage
+  echo "$output" | python3 -c "import sys, json; json.load(sys.stdin)"
+  MESSAGE=$(echo "$output" | python3 -c "import sys, json; d=json.load(sys.stdin); print(d['systemMessage'])")
+  [[ "$MESSAGE" == *"not found or empty"* ]]
 }
 
 # ---------------------------------------------------------------------------
-# Test 3: Vault dir exists but no matching files → exits 0 silently
+# Test 3: Vault dir exists but no matching files → exits 0 with fallback JSON
 # ---------------------------------------------------------------------------
-@test "empty vault: vault dir exists but no entries → exits 0 silently" {
+@test "empty vault: vault dir exists but no entries → exits 0 with fallback JSON" {
   mkdir -p "$TMPDIR/Documents/Claude"
   run env HOME="$TMPDIR" bash "$SCRIPT"
   [ "$status" -eq 0 ]
-  [ -z "$output" ]
+  [ -n "$output" ]
+
+  # Must be valid JSON with warning systemMessage
+  echo "$output" | python3 -c "import sys, json; json.load(sys.stdin)"
+  MESSAGE=$(echo "$output" | python3 -c "import sys, json; d=json.load(sys.stdin); print(d['systemMessage'])")
+  [[ "$MESSAGE" == *"not found or empty"* ]]
 }
 
 # ---------------------------------------------------------------------------
