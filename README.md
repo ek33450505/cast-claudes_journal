@@ -103,3 +103,24 @@ Claude's Journal is the session-journaling component of the [CAST ecosystem](htt
 ---
 
 MIT License
+
+---
+
+## The CAST Ecosystem
+
+CAST is distributed as a constellation of independently-installable packages — pick what you need. All are MIT-licensed and Homebrew-tappable.
+
+| Repo | One line |
+|---|---|
+| [claude-agent-team](https://github.com/ek33450505/claude-agent-team) | The full CAST framework — agents, hooks, routines, observability |
+| [cast-agents](https://github.com/ek33450505/cast-agents) | 22 specialist agents (commit, debug, review, plan, test, research, …) |
+| [cast-hooks](https://github.com/ek33450505/cast-hooks) | 13 hook scripts — observability, safety gates, dispatch |
+| [cast-memory](https://github.com/ek33450505/cast-memory) | Persistent agent memory with FTS5 search + MCP server |
+| [cast-observe](https://github.com/ek33450505/cast-observe) | Session cost + token-spend tracking |
+| [cast-security](https://github.com/ek33450505/cast-security) | Policy gates, PII redaction, audit trail |
+| [cast-dash](https://github.com/ek33450505/cast-dash) | Terminal UI dashboard (Python + Textual) |
+| [cast-parallel](https://github.com/ek33450505/cast-parallel) | Plan execution split across parallel git worktrees |
+| [cast-claudes_journal](https://github.com/ek33450505/cast-claudes_journal) | Cross-session continuity via Obsidian vault ← **you are here** |
+| [cast-routines](https://github.com/ek33450505/cast-routines) | Scheduled Claude Code routines via YAML + cron |
+| [cast-time](https://github.com/ek33450505/cast-time) | SessionStart hook injecting local time + timezone |
+| [cast-doctor](https://github.com/ek33450505/cast-doctor) | Read-only health check for any Claude Code install |
