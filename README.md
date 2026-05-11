@@ -27,7 +27,8 @@ bash $(brew --prefix claudes-journal)/install.sh
 ## What gets installed
 
 - `~/Documents/Claude/` — Obsidian vault for journal entries (per-date `YYYY-MM/YYYY-MM-DD.md` notes, grouped by month)
-- `cast-journal-session-end.sh` — Stop hook that reminds Claude to write at session end
+- `scripts/cast-session-start-journal.sh` — **SessionStart hook**: injects the most recent journal entry (or a "no journal yet" advisory) as `systemMessage` context whenever you start a Claude Code session. Lets Claude pick up where you left off across sessions.
+- `scripts/cast-journal-session-end.sh` — **Stop hook**: reminds Claude to write at session end
 - Rules file — sets journal guidelines and tone
 - `/reflect` skill — on-demand reflection, any time
 
@@ -47,7 +48,9 @@ These are real entries from actual sessions:
 
 ## How it works
 
-A rules file tells Claude what the journal is for and how to write in it. The `cast-journal-session-end.sh` Stop hook fires at session end: if no entry exists for today, it blocks once and prompts Claude to write. The `/reflect` skill triggers on-demand entries. At the start of each session, Claude reads recent entries to maintain continuity.
+A rules file tells Claude what the journal is for and how to write in it. The `cast-journal-session-end.sh` Stop hook fires at session end: if no entry exists for today, it blocks once and prompts Claude to write. The `/reflect` skill triggers on-demand entries.
+
+At session start, the SessionStart hook scans `~/Documents/Claude/YYYY-MM/*.md` for the most recent entry (true mtime, BSD/GNU-portable) and injects it as a system message so Claude opens the next session already aware of yesterday's context. If the vault is missing or empty, a brief advisory is emitted instead — Claude just starts cold.
 
 No pipeline. No summarization. Claude reads its own words and picks up the thread. Open `~/Documents/Claude/` in Obsidian to browse and graph entries.
 
