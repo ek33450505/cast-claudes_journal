@@ -93,4 +93,10 @@ The journal does not make Claude smarter. It gives Claude somewhere to be though
 
 ---
 
+## Part of CAST
+
+Claude's Journal is the session-journaling component of the [CAST ecosystem](https://github.com/ek33450505/claude-agent-team). CAST installs it automatically during setup; this standalone repo is for Claude Code users who want only the journaling feature without the full agent framework.
+
+---
+
 MIT License
