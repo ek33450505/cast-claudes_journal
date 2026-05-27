@@ -35,3 +35,15 @@ Don't announce that you're reading past entries — just let them inform your th
 - If the file already exists (multiple sessions in one day), append with a `---` separator and a section header
 - Write in first person
 - Use `[[wiki-links]]` to reference prior entries — Obsidian will graph them automatically
+
+## Frontmatter (optional but encouraged)
+
+Add YAML frontmatter at the top of each entry:
+
+```yaml
+---
+themes: [cast, hooks, drift-detection]
+---
+```
+
+This lets the theme MOC builder index entries automatically. Themes should be short, reusable slugs. Concepts that span multiple entries are the best candidates. The `cast-journal-build-mocs.sh` script reads these tags to generate `~/Documents/Claude/Themes/<theme>.md` index files.
