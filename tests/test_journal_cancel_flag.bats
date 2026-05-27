@@ -6,8 +6,11 @@ HOOK_SH="$REPO_DIR/scripts/cast-journal-session-end.sh"
 setup() {
   # Redirect HOME so the script writes to a temp vault
   export ORIG_HOME="$HOME"
+  export ORIG_TMP="${TMP:-}"
   export HOME
-  HOME="$(mktemp -d)"
+  export TMP="$BATS_TMPDIR/tmp"
+  mkdir -p "$TMP"
+  HOME="$(mktemp -d -p "$BATS_TMPDIR")"
   mkdir -p "$HOME/Documents/Claude/$(date +%Y-%m)"
 
   # Use a unique session ID per test
@@ -16,16 +19,17 @@ setup() {
 
   # Remove any real cancel or session flags that might bleed in
   TODAY="$(date +%Y-%m-%d)"
-  rm -f "/tmp/cast_journal_cancelled_${TODAY}"
-  rm -f "/tmp/cast_journal_session_${CLAUDE_SESSION_ID}"
+  rm -f "$TMP/cast_journal_cancelled_${TODAY}"
+  rm -f "$TMP/cast_journal_session_${CLAUDE_SESSION_ID}"
 }
 
 teardown() {
   TODAY="$(date +%Y-%m-%d)"
-  rm -f "/tmp/cast_journal_cancelled_${TODAY}"
-  rm -f "/tmp/cast_journal_session_${CLAUDE_SESSION_ID}"
-  rm -rf "$HOME"
+  rm -f "$TMP/cast_journal_cancelled_${TODAY}"
+  rm -f "$TMP/cast_journal_session_${CLAUDE_SESSION_ID}"
+  rm -rf "$HOME" "$BATS_TMPDIR/tmp"
   export HOME="$ORIG_HOME"
+  export TMP="${ORIG_TMP}"
 }
 
 # ---------------------------------------------------------------------------
@@ -33,11 +37,11 @@ teardown() {
 # ---------------------------------------------------------------------------
 @test "cancel flag + no entry + after 18:00 → re-prompt occurs" {
   TODAY="$(date +%Y-%m-%d)"
-  touch "/tmp/cast_journal_cancelled_${TODAY}"
+  touch "$TMP/cast_journal_cancelled_${TODAY}"
 
   # Stub date to return hour 19 (>= 18)
   # We wrap the script with a PATH-prepended fake date binary
-  FAKE_BIN="$(mktemp -d)"
+  FAKE_BIN="$(mktemp -d -p "$BATS_TMPDIR")"
   cat > "$FAKE_BIN/date" <<'DATEEOF'
 #!/usr/bin/env bash
 # Return hour 19 when called with +%H, delegate everything else to real date
@@ -72,7 +76,7 @@ DATEEOF
   echo "# Today's entry" > "$TODAY_NOTE"
 
   # Set cancel flag
-  touch "/tmp/cast_journal_cancelled_${TODAY}"
+  touch "$TMP/cast_journal_cancelled_${TODAY}"
 
   run bash "$HOOK_SH"
 
@@ -86,9 +90,9 @@ DATEEOF
 # ---------------------------------------------------------------------------
 @test "second call same session → honor flag regardless of hour or entry" {
   TODAY="$(date +%Y-%m-%d)"
-  touch "/tmp/cast_journal_cancelled_${TODAY}"
+  touch "$TMP/cast_journal_cancelled_${TODAY}"
   # Simulate "already prompted once this session" by pre-creating the session marker
-  touch "/tmp/cast_journal_session_${CLAUDE_SESSION_ID}"
+  touch "$TMP/cast_journal_session_${CLAUDE_SESSION_ID}"
 
   run bash "$HOOK_SH"
 
@@ -102,7 +106,7 @@ DATEEOF
 # ---------------------------------------------------------------------------
 @test "cancel flags older than 1 day are cleaned at script start" {
   # Create a cancel flag with yesterday's date name and force mtime to >1 day ago
-  OLD_FLAG="/tmp/cast_journal_cancelled_2020-01-01"
+  OLD_FLAG="$TMP/cast_journal_cancelled_2020-01-01"
   touch "$OLD_FLAG"
   touch -t "202001010000" "$OLD_FLAG"  # set mtime to 2020-01-01 (far in the past)
 
