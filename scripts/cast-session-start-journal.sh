@@ -44,7 +44,8 @@ DATEONLY="${BASENAME%.md}"
 
 # Check for end-of-day missed entry flag (yesterday's missed entry)
 YESTERDAY="$(date -v-1d +%Y-%m-%d 2>/dev/null || date -d 'yesterday' +%Y-%m-%d 2>/dev/null || python3 -c "from datetime import datetime, timedelta; print((datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d'))" 2>/dev/null || echo "")"
-EOD_FLAG="/tmp/cast_journal_eod_missed_${YESTERDAY}"
+TMP_DIR="${TMP:-/tmp}"
+EOD_FLAG="$TMP_DIR/cast_journal_eod_missed_${YESTERDAY}"
 EOD_NOTICE=""
 if [[ -f "$EOD_FLAG" ]]; then
   EOD_NOTICE="> You missed yesterday's journal entry. Before starting today's work, briefly reflect on yesterday and write \`~/Documents/Claude/$(echo "$YESTERDAY" | cut -d'-' -f1-2)/${YESTERDAY}.md\`.\n"
@@ -64,22 +65,36 @@ fi
 # Read excerpt (first 50 lines or up to separator)
 EXCERPT=$(head -50 "$LATEST_ENTRY" | sed '/^---$/q')
 
+# Weekly Ed-observation nudge
+WEEK_NUM=$(date +%Y%W)
+ED_NUDGE_FLAG="$TMP_DIR/cast_journal_ed_nudge_${WEEK_NUM}"
+ED_NUDGE=""
+if [[ ! -f "$ED_NUDGE_FLAG" ]]; then
+  touch "$ED_NUDGE_FLAG"
+  ED_NUDGE=$'\n'"Note: When you notice something about Ed today — how he works, what he cares about, a reaction to something — note it in your journal entry."
+fi
+
 # Emit JSON with safe env-var passing to avoid shell expansion into Python literals
 export CAST_JOURNAL_DATE="$PRETTY_DATE"
 export CAST_JOURNAL_EXCERPT="$EXCERPT"
 export CAST_EOD_NOTICE="$EOD_NOTICE"
+export CAST_ED_NUDGE="$ED_NUDGE"
 
 python3 << 'PYEOF'
 import json, os
 date = os.environ.get("CAST_JOURNAL_DATE", "")
 excerpt = os.environ.get("CAST_JOURNAL_EXCERPT", "").rstrip()
 eod_notice = os.environ.get("CAST_EOD_NOTICE", "").rstrip()
+ed_nudge = os.environ.get("CAST_ED_NUDGE", "").rstrip()
 # Build context with proper newline escaping for JSON
 lines = []
 if eod_notice:
   lines.append(eod_notice)
   lines.append("")
 lines.extend(["## Last Claude's Journal Entry (" + date + ")", "", excerpt, ""])
+if ed_nudge:
+  lines.append("")
+  lines.append(ed_nudge)
 context_text = "\n".join(lines)
 output = {
     "systemMessage": f"📓 journal | Latest entry from {date}",

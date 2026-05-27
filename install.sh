@@ -81,6 +81,28 @@ else
   _fail "Could not copy skill"
 fi
 
+# Step 5b: MOC builder script
+_step "Installing theme MOC builder..."
+if cp "${REPO_DIR}/scripts/cast-journal-build-mocs.sh" "${SCRIPTS_DIR}/cast-journal-build-mocs.sh" 2>/dev/null; then
+  chmod 750 "${SCRIPTS_DIR}/cast-journal-build-mocs.sh"
+  _ok "cast-journal-build-mocs.sh"
+else
+  _fail "Could not copy MOC builder script"
+fi
+
+# Step 5c: Optional weekly MOC rebuild cron
+_step "Setting up weekly theme MOC rebuild..."
+printf "  Install weekly theme MOC rebuild cron? (Sunday 09:00) [Y/n] "
+read -r moc_cron_choice 2>/dev/null || moc_cron_choice="y"
+if [[ "$moc_cron_choice" == [Yy]* ]] || [[ -z "$moc_cron_choice" ]]; then
+  SCRIPT_PATH="${SCRIPTS_DIR}/cast-journal-build-mocs.sh"
+  CRON_ENTRY="0 9 * * 0 bash \"$SCRIPT_PATH\" >> ~/.claude/logs/moc-rebuild.log 2>&1"
+  ( crontab -l 2>/dev/null | grep -v 'cast-journal-build-mocs' || true; echo "$CRON_ENTRY" ) | crontab -
+  _ok "Weekly MOC rebuild cron installed (Sunday 09:00)"
+else
+  _ok "Skipped weekly MOC rebuild cron"
+fi
+
 # Step 6: Merge hook settings
 _step "Registering session-end hook..."
 MERGE_SCRIPT="${REPO_DIR}/scripts/claudes_journal-merge-settings.sh"

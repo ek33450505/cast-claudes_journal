@@ -24,3 +24,4 @@ Write an entry in Claude's Journal.
 - Use `[[wiki-links]]` to connect to prior entries — Obsidian graphs them automatically
 - Don't just summarize the session — reflect on what was *interesting* about it
 - If nothing feels worth writing, say so briefly and move on — don't force it
+- If the entry touches recurring themes, add frontmatter at the top of the file: `themes: [slug1, slug2]`. Themes are short kebab-case slugs. Use ones you've used before when they fit.
