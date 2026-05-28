@@ -209,3 +209,107 @@ DATEEOF
 
   rm -rf "$FAKE_BIN"
 }
+
+# ---------------------------------------------------------------------------
+# Test 9: .predictions-due.md present → SessionStart includes its content
+# ---------------------------------------------------------------------------
+@test "predictions injection: .predictions-due.md present → content injected into context" {
+  set -euo pipefail
+
+  mkdir -p "$TMPDIR/Documents/Claude/2026-05"
+  mkdir -p "$BATS_TEST_TMPDIR/tmp"
+
+  cat > "$TMPDIR/Documents/Claude/2026-05/2026-05-04.md" <<'EOF'
+# Entry for predictions test
+
+Content here.
+EOF
+
+  # Create .predictions-due.md
+  cat > "$TMPDIR/Documents/Claude/.predictions-due.md" <<'EOF'
+# Predictions due for check-in
+
+_2 prediction(s) older than 30 days — consider revisiting in today's entry._
+
+- **2026-04-01** — I predict we'll finish refactoring
+- **2026-04-05** — Question: should we upgrade Node?
+EOF
+
+  export TMP="$BATS_TEST_TMPDIR/tmp"
+
+  run env HOME="$TMPDIR" TMP="$TMP" bash "$SCRIPT"
+  [ "$status" -eq 0 ]
+
+  # Context should include predictions section
+  CONTEXT=$(echo "$output" | python3 -c "import sys, json; d=json.load(sys.stdin); print(d['hookSpecificOutput']['additionalContext'])")
+  [[ "$CONTEXT" == *"Predictions due for check-in"* ]]
+  [[ "$CONTEXT" == *"I predict we'll finish refactoring"* ]]
+  [[ "$CONTEXT" == *"Question: should we upgrade Node?"* ]]
+}
+
+# ---------------------------------------------------------------------------
+# Test 10: .predictions-due.md deleted after SessionStart reads it
+# ---------------------------------------------------------------------------
+@test "predictions cleanup: .predictions-due.md removed after hook runs" {
+  set -euo pipefail
+
+  mkdir -p "$TMPDIR/Documents/Claude/2026-05"
+  mkdir -p "$BATS_TEST_TMPDIR/tmp"
+
+  cat > "$TMPDIR/Documents/Claude/2026-05/2026-05-04.md" <<'EOF'
+# Entry
+
+Content.
+EOF
+
+  # Create .predictions-due.md
+  cat > "$TMPDIR/Documents/Claude/.predictions-due.md" <<'EOF'
+# Predictions due for check-in
+
+_1 prediction(s) older than 30 days._
+
+- **2026-04-01** — I predict
+EOF
+
+  export TMP="$BATS_TEST_TMPDIR/tmp"
+
+  # File should exist before run
+  [ -f "$TMPDIR/Documents/Claude/.predictions-due.md" ]
+
+  run env HOME="$TMPDIR" TMP="$TMP" bash "$SCRIPT"
+  [ "$status" -eq 0 ]
+
+  # File should be deleted after run
+  [ ! -f "$TMPDIR/Documents/Claude/.predictions-due.md" ]
+}
+
+# ---------------------------------------------------------------------------
+# Test 11: .predictions-due.md absent → SessionStart output unchanged
+# ---------------------------------------------------------------------------
+@test "predictions absent: .predictions-due.md missing → no predictions section in output" {
+  set -euo pipefail
+
+  mkdir -p "$TMPDIR/Documents/Claude/2026-05"
+  mkdir -p "$BATS_TEST_TMPDIR/tmp"
+
+  cat > "$TMPDIR/Documents/Claude/2026-05/2026-05-04.md" <<'EOF'
+# Entry
+
+Content.
+EOF
+
+  # Do NOT create .predictions-due.md
+
+  export TMP="$BATS_TEST_TMPDIR/tmp"
+
+  run env HOME="$TMPDIR" TMP="$TMP" bash "$SCRIPT"
+  [ "$status" -eq 0 ]
+
+  CONTEXT=$(echo "$output" | python3 -c "import sys, json; d=json.load(sys.stdin); print(d['hookSpecificOutput']['additionalContext'])")
+
+  # Should not contain predictions section
+  [[ "$CONTEXT" != *"Predictions due for check-in"* ]]
+
+  # Should still have the entry section
+  [[ "$CONTEXT" == *"Last Claude's Journal Entry"* ]]
+}

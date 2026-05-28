@@ -74,11 +74,20 @@ if [[ ! -f "$ED_NUDGE_FLAG" ]]; then
   ED_NUDGE=$'\n'"Note: When you notice something about Ed today — how he works, what he cares about, a reaction to something — note it in your journal entry."
 fi
 
+# Predictions due-check (Phase 3)
+PREDICTIONS_DUE_FILE="${VAULT_PATH}/.predictions-due.md"
+PREDICTIONS_SECTION=""
+if [[ -f "$PREDICTIONS_DUE_FILE" ]]; then
+  PREDICTIONS_SECTION="$(cat "$PREDICTIONS_DUE_FILE")"
+  rm -f "$PREDICTIONS_DUE_FILE" 2>/dev/null || true
+fi
+
 # Emit JSON with safe env-var passing to avoid shell expansion into Python literals
 export CAST_JOURNAL_DATE="$PRETTY_DATE"
 export CAST_JOURNAL_EXCERPT="$EXCERPT"
 export CAST_EOD_NOTICE="$EOD_NOTICE"
 export CAST_ED_NUDGE="$ED_NUDGE"
+export CAST_PREDICTIONS_SECTION="$PREDICTIONS_SECTION"
 
 python3 << 'PYEOF'
 import json, os
@@ -86,6 +95,7 @@ date = os.environ.get("CAST_JOURNAL_DATE", "")
 excerpt = os.environ.get("CAST_JOURNAL_EXCERPT", "").rstrip()
 eod_notice = os.environ.get("CAST_EOD_NOTICE", "").rstrip()
 ed_nudge = os.environ.get("CAST_ED_NUDGE", "").rstrip()
+predictions_section = os.environ.get("CAST_PREDICTIONS_SECTION", "").rstrip()
 # Build context with proper newline escaping for JSON
 lines = []
 if eod_notice:
@@ -95,6 +105,9 @@ lines.extend(["## Last Claude's Journal Entry (" + date + ")", "", excerpt, ""])
 if ed_nudge:
   lines.append("")
   lines.append(ed_nudge)
+if predictions_section:
+  lines.append("")
+  lines.append(predictions_section)
 context_text = "\n".join(lines)
 output = {
     "systemMessage": f"📓 journal | Latest entry from {date}",
