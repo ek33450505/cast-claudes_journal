@@ -100,6 +100,33 @@ else
   _fail "Could not copy MOC builder script"
 fi
 
+# Step 5b2: Weekly synthesis script
+_step "Installing weekly synthesis script..."
+if cp "${REPO_DIR}/scripts/cast-journal-weekly-synthesis.sh" "${SCRIPTS_DIR}/cast-journal-weekly-synthesis.sh" 2>/dev/null; then
+  chmod 750 "${SCRIPTS_DIR}/cast-journal-weekly-synthesis.sh"
+  _ok "cast-journal-weekly-synthesis.sh"
+else
+  _fail "Could not copy weekly synthesis script"
+fi
+
+# Step 5b3: Prediction extractor script
+_step "Installing prediction extractor script..."
+if cp "${REPO_DIR}/scripts/cast-journal-extract-predictions.sh" "${SCRIPTS_DIR}/cast-journal-extract-predictions.sh" 2>/dev/null; then
+  chmod 750 "${SCRIPTS_DIR}/cast-journal-extract-predictions.sh"
+  _ok "cast-journal-extract-predictions.sh"
+else
+  _fail "Could not copy prediction extractor script"
+fi
+
+# Step 5b4: Prediction checker script
+_step "Installing prediction checker script..."
+if cp "${REPO_DIR}/scripts/cast-journal-check-predictions.sh" "${SCRIPTS_DIR}/cast-journal-check-predictions.sh" 2>/dev/null; then
+  chmod 750 "${SCRIPTS_DIR}/cast-journal-check-predictions.sh"
+  _ok "cast-journal-check-predictions.sh"
+else
+  _fail "Could not copy prediction checker script"
+fi
+
 # Step 5d: UserPromptSubmit injection script
 _step "Installing UserPromptSubmit injection hook..."
 if cp "${REPO_DIR}/scripts/cast-journal-userprompt-inject.sh" "${SCRIPTS_DIR}/cast-journal-userprompt-inject.sh" 2>/dev/null; then
@@ -120,6 +147,34 @@ if [[ "$moc_cron_choice" == [Yy]* ]] || [[ -z "$moc_cron_choice" ]]; then
   _ok "Weekly MOC rebuild cron installed (Sunday 09:00)"
 else
   _ok "Skipped weekly MOC rebuild cron"
+fi
+
+# Step 5e: Optional weekly synthesis cron
+_step "Setting up weekly journal synthesis..."
+printf "  Install weekly journal synthesis cron? (Sunday 09:00, requires claude CLI) [Y/n] "
+read -r synth_cron_choice 2>/dev/null || synth_cron_choice="y"
+if [[ "$synth_cron_choice" == [Yy]* ]] || [[ -z "$synth_cron_choice" ]]; then
+  SYNTH_SCRIPT_PATH="${SCRIPTS_DIR}/cast-journal-weekly-synthesis.sh"
+  SYNTH_CRON_ENTRY="0 9 * * 0 bash \"$SYNTH_SCRIPT_PATH\" >> ~/.claude/logs/synthesis-cron.log 2>&1"
+  ( crontab -l 2>/dev/null | grep -v 'cast-journal-weekly-synthesis' || true; echo "$SYNTH_CRON_ENTRY" ) | crontab -
+  _ok "Weekly synthesis cron installed (Sunday 09:00)"
+else
+  _ok "Skipped weekly synthesis cron"
+fi
+
+# Step 5f: Optional prediction-tracking cron
+_step "Setting up prediction tracking..."
+printf "  Install prediction-tracking cron? (daily extract + weekly check) [Y/n] "
+read -r pred_cron_choice 2>/dev/null || pred_cron_choice="y"
+if [[ "$pred_cron_choice" == [Yy]* ]] || [[ -z "$pred_cron_choice" ]]; then
+  EXTRACT_PATH="${SCRIPTS_DIR}/cast-journal-extract-predictions.sh"
+  CHECK_PATH="${SCRIPTS_DIR}/cast-journal-check-predictions.sh"
+  EXTRACT_CRON="45 23 * * * bash \"$EXTRACT_PATH\" >> ~/.claude/logs/predictions-cron.log 2>&1"
+  CHECK_CRON="5 9 * * 0 bash \"$CHECK_PATH\" >> ~/.claude/logs/predictions-cron.log 2>&1"
+  ( crontab -l 2>/dev/null | grep -v 'cast-journal-extract-predictions\|cast-journal-check-predictions' || true; echo "$EXTRACT_CRON"; echo "$CHECK_CRON" ) | crontab -
+  _ok "Prediction-tracking cron installed"
+else
+  _ok "Skipped prediction-tracking cron"
 fi
 
 # Step 6: Merge hook settings
