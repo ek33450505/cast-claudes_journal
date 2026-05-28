@@ -81,6 +81,16 @@ else
   _fail "Could not copy skill"
 fi
 
+# Step 5a: /note skill
+_step "Installing /note skill..."
+NOTE_SKILL_DIR="${CLAUDE_DIR}/skills/note"
+mkdir -p "${NOTE_SKILL_DIR}"
+if cp "${REPO_DIR}/skills/note/instructions.md" "${NOTE_SKILL_DIR}/instructions.md" 2>/dev/null; then
+  _ok "/note → ~/.claude/skills/note/"
+else
+  _fail "Could not copy /note skill"
+fi
+
 # Step 5b: MOC builder script
 _step "Installing theme MOC builder..."
 if cp "${REPO_DIR}/scripts/cast-journal-build-mocs.sh" "${SCRIPTS_DIR}/cast-journal-build-mocs.sh" 2>/dev/null; then
@@ -88,6 +98,15 @@ if cp "${REPO_DIR}/scripts/cast-journal-build-mocs.sh" "${SCRIPTS_DIR}/cast-jour
   _ok "cast-journal-build-mocs.sh"
 else
   _fail "Could not copy MOC builder script"
+fi
+
+# Step 5d: UserPromptSubmit injection script
+_step "Installing UserPromptSubmit injection hook..."
+if cp "${REPO_DIR}/scripts/cast-journal-userprompt-inject.sh" "${SCRIPTS_DIR}/cast-journal-userprompt-inject.sh" 2>/dev/null; then
+  chmod 750 "${SCRIPTS_DIR}/cast-journal-userprompt-inject.sh"
+  _ok "cast-journal-userprompt-inject.sh"
+else
+  _fail "Could not copy UserPromptSubmit hook script"
 fi
 
 # Step 5c: Optional weekly MOC rebuild cron

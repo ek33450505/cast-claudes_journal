@@ -23,6 +23,18 @@
           }
         ]
       }
+    ],
+    "UserPromptSubmit": [
+      {
+        "id": "cast-journal-userprompt-inject",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/scripts/cast-journal-userprompt-inject.sh",
+            "timeout": 5
+          }
+        ]
+      }
     ]
   }
 }
