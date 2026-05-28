@@ -244,3 +244,117 @@ DATEEOF
   [ "$status" -eq 0 ]
   [ -z "$output" ]
 }
+
+# ---------------------------------------------------------------------------
+# Test 9: Scratchpad present and non-empty → prompt includes scratchpad path
+# ---------------------------------------------------------------------------
+@test "scratchpad present: non-empty .scratch/<TODAY>.md → prompt mentions scratchpad path" {
+  TODAY="$(date +%Y-%m-%d)"
+  VAULT="$HOME/Documents/Claude"
+  MONTH="$(date +%Y-%m)"
+  SCRATCH_DIR="$VAULT/.scratch"
+  SCRATCH_FILE="$SCRATCH_DIR/${TODAY}.md"
+
+  # Create scratchpad directory and file
+  mkdir -p "$SCRATCH_DIR"
+  cat > "$SCRATCH_FILE" <<'EOF'
+- 14:30 — observation one
+- 14:45 — observation two
+- 15:00 — observation three
+EOF
+
+  # Override CAST_JOURNAL_VAULT to point to test vault
+  export CAST_JOURNAL_VAULT="$VAULT"
+
+  FAKE_BIN="$(mktemp -d)"
+  cat > "$FAKE_BIN/date" <<'DATEEOF'
+#!/usr/bin/env bash
+if [[ "${1:-}" == "+%H" ]]; then
+  echo "18"
+  exit 0
+fi
+exec /bin/date "$@"
+DATEEOF
+  chmod +x "$FAKE_BIN/date"
+
+  run env PATH="$FAKE_BIN:$PATH" bash "$HOOK_SH"
+
+  rm -rf "$FAKE_BIN"
+
+  [ "$status" -eq 0 ]
+  # Verify output is JSON with decision: block
+  [[ "$output" == *"block"* ]]
+  # Verify scratchpad path is mentioned in the reason
+  [[ "$output" == *"${SCRATCH_FILE}"* || "$output" == *".scratch"* ]]
+}
+
+# ---------------------------------------------------------------------------
+# Test 10: Scratchpad file does not exist → prompt does NOT mention scratchpad
+# ---------------------------------------------------------------------------
+@test "no scratchpad: file absent → prompt does NOT mention scratchpad" {
+  TODAY="$(date +%Y-%m-%d)"
+  VAULT="$HOME/Documents/Claude"
+  SCRATCH_DIR="$VAULT/.scratch"
+  SCRATCH_FILE="$SCRATCH_DIR/${TODAY}.md"
+
+  # Do NOT create scratchpad file
+
+  export CAST_JOURNAL_VAULT="$VAULT"
+
+  FAKE_BIN="$(mktemp -d)"
+  cat > "$FAKE_BIN/date" <<'DATEEOF'
+#!/usr/bin/env bash
+if [[ "${1:-}" == "+%H" ]]; then
+  echo "18"
+  exit 0
+fi
+exec /bin/date "$@"
+DATEEOF
+  chmod +x "$FAKE_BIN/date"
+
+  run env PATH="$FAKE_BIN:$PATH" bash "$HOOK_SH"
+
+  rm -rf "$FAKE_BIN"
+
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"block"* ]]
+  # Scratchpad should NOT be mentioned
+  [[ ! "$output" == *"scratchpad"* ]]
+  [[ ! "$output" == *".scratch"* ]]
+}
+
+# ---------------------------------------------------------------------------
+# Test 11: Scratchpad file exists but is empty → prompt does NOT mention scratchpad
+# ---------------------------------------------------------------------------
+@test "empty scratchpad: file empty → prompt does NOT mention scratchpad" {
+  TODAY="$(date +%Y-%m-%d)"
+  VAULT="$HOME/Documents/Claude"
+  SCRATCH_DIR="$VAULT/.scratch"
+  SCRATCH_FILE="$SCRATCH_DIR/${TODAY}.md"
+
+  # Create empty scratchpad
+  mkdir -p "$SCRATCH_DIR"
+  touch "$SCRATCH_FILE"
+
+  export CAST_JOURNAL_VAULT="$VAULT"
+
+  FAKE_BIN="$(mktemp -d)"
+  cat > "$FAKE_BIN/date" <<'DATEEOF'
+#!/usr/bin/env bash
+if [[ "${1:-}" == "+%H" ]]; then
+  echo "18"
+  exit 0
+fi
+exec /bin/date "$@"
+DATEEOF
+  chmod +x "$FAKE_BIN/date"
+
+  run env PATH="$FAKE_BIN:$PATH" bash "$HOOK_SH"
+
+  rm -rf "$FAKE_BIN"
+
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"block"* ]]
+  # Empty scratchpad should NOT trigger the addendum
+  [[ ! "$output" == *"scratchpad"* || "$output" == *"Do not"* ]]
+}

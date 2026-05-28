@@ -10,12 +10,13 @@ if [[ "${CLAUDE_SUBPROCESS:-0}" == "1" ]]; then exit 0; fi
 
 set +e
 
-VAULT_DIR="${HOME}/Documents/Claude"
+VAULT_DIR="${CAST_JOURNAL_VAULT:-$HOME/Documents/Claude}"
 TODAY="$(date +%Y-%m-%d)"
 YESTERDAY="$(date -v-1d +%Y-%m-%d 2>/dev/null || date -d 'yesterday' +%Y-%m-%d)"
 MONTH="$(date +%Y-%m)"
 MONTH_DIR="${VAULT_DIR}/${MONTH}"
 TODAY_NOTE="${MONTH_DIR}/${TODAY}.md"
+SCRATCH_FILE="${VAULT_DIR}/.scratch/${TODAY}.md"
 CURRENT_HOUR="$(date +%H)"
 
 mkdir -p "$MONTH_DIR" 2>/dev/null
@@ -90,11 +91,17 @@ fi
 # No entry today — set cancel flag and ask for a journal entry
 touch "$CANCEL_FLAG" 2>/dev/null || true
 
+# Scratchpad distillation check (Phase 2)
+SCRATCH_ADDENDUM=""
+if [[ -f "$SCRATCH_FILE" ]] && [[ -s "$SCRATCH_FILE" ]]; then
+  SCRATCH_ADDENDUM="\n\nYou have scratchpad notes from this session at ${SCRATCH_FILE}. Read them with the Read tool, distill key insights into today's journal entry, then you may stop."
+fi
+
 # Build prompt message based on whether this is a new entry or deepening a stub
 if [[ -s "$TODAY_NOTE" ]]; then
-  PROMPT_MESSAGE="Today's entry is brief. Before closing, add more if there's more to say.\n\n---\n**Prev:** [[${YESTERDAY}]]\n\nWrap recurring concepts as [[wiki-links]] (e.g., [[CAST]], [[Engram]], [[Managed Agents]]) so they form topic hubs in the graph. Then you may stop."
+  PROMPT_MESSAGE="Today's entry is brief. Before closing, add more if there's more to say.\n\n---\n**Prev:** [[${YESTERDAY}]]\n\nWrap recurring concepts as [[wiki-links]] (e.g., [[CAST]], [[Engram]], [[Managed Agents]]) so they form topic hubs in the graph.${SCRATCH_ADDENDUM}\nThen you may stop."
 else
-  PROMPT_MESSAGE="No journal entry written today. Before closing, create ~/Documents/Claude/${MONTH}/${TODAY}.md using the Write tool.\n\nSuggested starter:\n# <Month Day, Year>\n\n<your reflection — first person, what was interesting/surprising/worth carrying forward>\n\n---\n**Prev:** [[${YESTERDAY}]]\n\nWrap recurring concepts as [[wiki-links]] (e.g., [[CAST]], [[Engram]], [[Managed Agents]]) so they form topic hubs in the graph. Then you may stop."
+  PROMPT_MESSAGE="No journal entry written today. Before closing, create ~/Documents/Claude/${MONTH}/${TODAY}.md using the Write tool.\n\nSuggested starter:\n# <Month Day, Year>\n\n<your reflection — first person, what was interesting/surprising/worth carrying forward>\n\n---\n**Prev:** [[${YESTERDAY}]]\n\nWrap recurring concepts as [[wiki-links]] (e.g., [[CAST]], [[Engram]], [[Managed Agents]]) so they form topic hubs in the graph.${SCRATCH_ADDENDUM}\nThen you may stop."
 fi
 
 export CAST_PROMPT_MESSAGE="$PROMPT_MESSAGE"
