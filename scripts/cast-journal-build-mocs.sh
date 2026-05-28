@@ -14,7 +14,7 @@ mkdir -p "$THEMES_DIR"
 # Respect BATS_TMPDIR for test environments, fall back to TMPDIR or system temp
 TEMP_DIR="${BATS_TMPDIR:-${TMPDIR:-/tmp}}"
 TEMP_THEMES="${TEMP_DIR}/cast_journal_mocs_$$_$RANDOM"
-trap "rm -f '$TEMP_THEMES'" EXIT
+trap 'rm -f "$TEMP_THEMES"' EXIT
 
 find "$VAULT" -path "$VAULT/????-??/????-??-??.md" -type f 2>/dev/null | sort | while read -r entry_file; do
   in_frontmatter=0
