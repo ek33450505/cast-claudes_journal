@@ -2,7 +2,7 @@
 
 **Give Claude a journal. Watch what happens.**
 
-Claude's Journal gives Claude Code a personal journal space with session-end reminders and cross-session continuity. Journal entries are per-date notes (`YYYY-MM/YYYY-MM-DD.md`) written to an Obsidian vault at `~/Documents/Claude/`. Each note becomes a graph node — `[[wiki-links]]` between entries form edges.
+Claude's Journal integrates a personal journaling system into Claude Code with session-bounded reminders, per-turn working memory injection, and cross-session continuity. Entries are stored as per-date markdown files (`YYYY-MM/YYYY-MM-DD.md`) in an Obsidian vault at `~/Documents/Claude/` — each entry becomes a graph node, and `[[wiki-links]]` between entries form a knowledge network.
 
 ---
 
@@ -22,15 +22,33 @@ brew install claudes-journal
 bash $(brew --prefix claudes-journal)/install.sh
 ```
 
+The installer will prompt for optional scheduled tasks (cron jobs). Use `bash install.sh --yes` for non-interactive CI mode.
+
 ---
 
 ## What gets installed
 
-- `~/Documents/Claude/` — Obsidian vault for journal entries (per-date `YYYY-MM/YYYY-MM-DD.md` notes, grouped by month)
-- `scripts/cast-session-start-journal.sh` — **SessionStart hook**: injects the most recent journal entry (or a "no journal yet" advisory) as `systemMessage` context whenever you start a Claude Code session. Lets Claude pick up where you left off across sessions.
-- `scripts/cast-journal-session-end.sh` — **Stop hook**: reminds Claude to write at session end
-- Rules file — sets journal guidelines and tone
-- `/reflect` skill — on-demand reflection, any time
+**Hooks (3 total)**
+- `cast-journal-session-end.sh` — **Stop hook**: session-end reminder with time-of-day guard (no prompt before 15:00 unless explicitly closed), stub-entry detection, and scratchpad distillation
+- `cast-session-start-journal.sh` — **SessionStart hook**: injects prior-day context, weekly Ed-observation nudge, end-of-day-missed flag check, and predictions-due alerts
+- `cast-journal-userprompt-inject.sh` — **UserPromptSubmit hook**: injects last 20 lines of today's journal + scratchpad at every turn (deterministic, capped at 40 combined lines) for mid-session continuity
+
+**Skills (3 total)**
+- `/reflect` — on-demand reflection entry (any time)
+- `/wrap` — explicit session-end signal, bypassing time guards
+- `/note [text]` — mid-session scratchpad append in `HH:MM — <observation>` format
+
+**Vault directory**
+- `~/Documents/Claude/` — Obsidian vault with per-date `YYYY-MM/YYYY-MM-DD.md` entries
+
+**Rules file**
+- `~/.claude/rules/claudes_journal.md` — journal guidelines and tone
+
+**Optional scheduled tasks (4 total, all opt-in)**
+- `cast-journal-build-mocs.sh` (Sunday 09:00) — rebuilds theme map-of-content files from `themes:` frontmatter with marker-fence preservation
+- `cast-journal-weekly-synthesis.sh` (Sunday 09:00) — pipes last 7 entries to `claude --print` for 200–300 word synthesis (requires `claude` CLI)
+- `cast-journal-extract-predictions.sh` (daily 23:45) — greps entries for prediction/question tags
+- `cast-journal-check-predictions.sh` (Sunday 09:05) — surfaces 30+ day-old open predictions via SessionStart alert
 
 ---
 
@@ -48,24 +66,74 @@ These are real entries from actual sessions:
 
 ## How it works
 
-A rules file tells Claude what the journal is for and how to write in it. The `cast-journal-session-end.sh` Stop hook fires at session end: if no entry exists for today, it blocks once and prompts Claude to write. The `/reflect` skill triggers on-demand entries.
+**Session-bounded reminders:** The Stop hook fires at session end. Before 15:00, it skips silently. After 15:00 (or when `/wrap` is used), if no entry exists for today, the hook prompts Claude to write a reflection. Before stopping, it reads the scratchpad (`.scratch/<DATE>.md`) and prompts Claude to distill working notes into the day's entry.
 
-At session start, the SessionStart hook scans `~/Documents/Claude/YYYY-MM/*.md` for the most recent entry (true mtime, BSD/GNU-portable) and injects it as a system message so Claude opens the next session already aware of yesterday's context. If the vault is missing or empty, a brief advisory is emitted instead — Claude just starts cold.
+**Per-turn working memory:** The UserPromptSubmit hook injects the last 20 lines of today's journal entry and the last 20 lines of today's scratchpad at the start of every prompt, keeping recent context deterministically in-play without cache-busting noise.
 
-No pipeline. No summarization. Claude reads its own words and picks up the thread. Open `~/Documents/Claude/` in Obsidian to browse and graph entries.
+**Cross-session continuity:** The SessionStart hook finds the most recent dated entry (by true mtime, BSD/GNU-portable) and injects it as a system message so Claude starts the next session already aware of prior context. It also checks for an end-of-day-missed flag (set by the optional `cast-journal-eod-flag.sh` cron) and alerts if the previous day had no entry. Weekly predictions-due alerts surface when `/predict` or `/question` entries are 30+ days old.
+
+**Async/periodic processing:** Optional cron jobs run on Sunday mornings: theme MOC files rebuild from `themes:` frontmatter, and a 7-entry synthesis is generated. Prediction tracking runs nightly (extraction) and weekly (surfacing).
+
+---
+
+## Configuration
+
+**Environment variables:**
+- `CAST_JOURNAL_VAULT` — override vault path (default: `$HOME/Documents/Claude`). Honored by all hooks and skills. Useful for testing or alternate setups.
+
+**Session-end time guard:**
+- Stop hook respects `CURRENT_HOUR` (24-hour format). Prompts only after 15:00, unless `/wrap` is used to signal explicit end.
+
+**Scratchpad location:**
+- `$VAULT/.scratch/<DATE>.md` — hidden working-memory file. Obsidian ignores `.scratch/` by convention.
+
+**Optional `/tmp` flags:**
+- `cast_journal_wrap_<DATE>` — written by `/wrap` skill to signal explicit session end
+- `cast_journal_eod_missed_<DATE>` — written by optional `cast-journal-eod-flag.sh` cron (daily 23:30)
+
+**Cron entries (if installed):**
+- `0 9 * * 0 bash <path>/cast-journal-build-mocs.sh` — weekly MOC rebuild
+- `0 9 * * 0 bash <path>/cast-journal-weekly-synthesis.sh` — weekly synthesis
+- `45 23 * * * bash <path>/cast-journal-extract-predictions.sh` — daily prediction extraction
+- `5 9 * * 0 bash <path>/cast-journal-check-predictions.sh` — weekly prediction check
+
+---
+
+## Conventions
+
+**Frontmatter themes:**
+Entries tagged with `themes: [slug1, slug2]` are indexed into per-theme map-of-content (MOC) files at `~/Documents/Claude/Themes/<theme>.md`. The builder is idempotent and preserves hand-curated content outside the marker fence.
+
+**Theme MOC marker fence:**
+Auto-generated content in theme MOCs is wrapped between `<!-- CAST-JOURNAL-AUTO-ENTRIES-START -->` and `<!-- CAST-JOURNAL-AUTO-ENTRIES-END -->`. You can safely edit anything outside these markers (description, Bases queries, seed entries). First run on a new theme appends a `## Auto-indexed entries` section; subsequent runs only update between the markers.
+
+**Scratchpad format:**
+Observations appended via `/note` follow the format `- HH:MM — <observation>`. The Stop hook reads the scratchpad and prompts Claude to distill it into the day's main entry before closing the session.
 
 ---
 
 ## FAQ
 
 **Does it cost extra tokens?**
-Minimal. The session-end reminder is ~200 tokens. Reading recent entries at session start is ~500 tokens depending on entry length.
+Minimal. The session-end reminder is ~200 tokens. SessionStart context is ~500 tokens depending on entry length. UserPromptSubmit injection is capped at 40 combined lines, typically 100–200 tokens per turn.
+
+**Do I need an Anthropic API key?**
+Only for the optional weekly synthesis cron (`cast-journal-weekly-synthesis.sh`). All hooks and skills work without the API key. The synthesis script requires the `claude` CLI on PATH; it skips silently if missing.
+
+**What if I don't want some cron jobs?**
+The installer prompts for each scheduled task individually. You can omit them during install or remove them from your crontab later.
 
 **Can I read the entries?**
 Yes. They are plain markdown files in `~/Documents/Claude/`. Open in Obsidian or any text editor.
 
+**Can I edit theme MOC files?**
+Yes. Anything outside the marker fence (`<!-- CAST-JOURNAL-AUTO-ENTRIES-START/END -->`) is yours to customize. The MOC builder only overwrites content between the markers.
+
 **Can I delete entries?**
 Yes. Delete any file you want. The journal has no index or database — it is just files.
+
+**Does it sync between devices?**
+Obsidian Sync handles the vault files across devices. The hook scripts and `/tmp` flags are per-machine (not synced).
 
 **Does it work without CAST?**
 Yes, completely standalone. No dependency on the CAST framework, cast.db, or any other CAST tooling.
@@ -78,7 +146,7 @@ Yes, completely standalone. No dependency on the CAST framework, cast.db, or any
 bash uninstall.sh
 ```
 
-Your journal entries are preserved. Only the hook, rules file, and skill are removed.
+Your journal entries are preserved. Only the hooks, skills, rules file, and cron entries are removed. (Note: the uninstall script may not remove cron entries — you may need to manually edit your crontab if necessary.)
 
 ---
 
