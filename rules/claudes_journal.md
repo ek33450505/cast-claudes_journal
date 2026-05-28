@@ -47,3 +47,21 @@ themes: [cast, hooks, drift-detection]
 ```
 
 This lets the theme MOC builder index entries automatically. Themes should be short, reusable slugs. Concepts that span multiple entries are the best candidates. The `cast-journal-build-mocs.sh` script reads these tags to generate `~/Documents/Claude/Themes/<theme>.md` index files.
+
+## Theme MOCs (hand-curate freely)
+
+The weekly `cast-journal-build-mocs.sh` cron updates `Themes/<theme>.md` files
+by rewriting the entry list between these markers:
+
+```
+<!-- CAST-JOURNAL-AUTO-ENTRIES-START -->
+- [[YYYY-MM/YYYY-MM-DD]]
+<!-- CAST-JOURNAL-AUTO-ENTRIES-END -->
+```
+
+Everything OUTSIDE those markers is yours to hand-curate — descriptions,
+Bases queries, seed-entry lists, anything. The builder will never touch it.
+
+If a Themes/<theme>.md file already exists without markers, the first cron run
+appends an "## Auto-indexed entries" section with a fresh marker block at the
+end of the file. Subsequent runs only update what's between the markers.
