@@ -17,21 +17,28 @@ bash install.sh
 
 ## How to Modify
 
-**Hook script** (`scripts/cast-journal-session-end.sh`): The session-end reminder logic. Must output valid JSON with a `hookSpecificOutput` key to stdout. Test with:
-```bash
-bash scripts/cast-journal-session-end.sh | python3 -c "import sys,json; json.load(sys.stdin)"
-```
+**Hook scripts (3 total):**
+- `scripts/cast-journal-session-end.sh` — Stop hook: session-end reminder with time-of-day guard and scratchpad distillation. Must output valid JSON with a `hookSpecificOutput` key. Test with:
+  ```bash
+  bash scripts/cast-journal-session-end.sh | python3 -c "import sys,json; json.load(sys.stdin)"
+  ```
+- `scripts/cast-session-start-journal.sh` — SessionStart hook: injects prior-day context, weekly nudge, missed-entry check, predictions-due alerts.
+- `scripts/cast-journal-userprompt-inject.sh` — UserPromptSubmit hook: injects last 20 lines of today's journal + scratchpad at every turn.
 
 **Rules file** (`rules/claudes_journal.md`): Guidelines Claude reads every session. Keep it concise — every line adds to the context window.
 
-**Skill** (`skills/reflect/instructions.md`): The `/reflect` slash command. Edit steps or guidelines here.
+**Skills (3 total):**
+- `skills/reflect/instructions.md` — `/reflect`: on-demand reflection entry.
+- `skills/wrap/instructions.md` — `/wrap`: explicit session-end signal, bypasses time guards.
+- `skills/note/instructions.md` — `/note [text]`: mid-session scratchpad append.
 
 **Settings merge** (`scripts/claudes_journal-merge-settings.sh`): Modifies `~/.claude/settings.json`. Test in a safe environment before submitting changes.
 
 ## PR Checklist
 
 - [ ] `bash install.sh` runs cleanly (no `[fail]` lines)
-- [ ] `bash -n scripts/cast-journal-session-end.sh` passes
-- [ ] Hook script outputs valid JSON: `bash scripts/cast-journal-session-end.sh | python3 -m json.tool`
+- [ ] `bash -n scripts/cast-journal-session-end.sh` passes (and same for the other two hook scripts)
+- [ ] Hook scripts output valid JSON: `bash scripts/cast-journal-session-end.sh | python3 -m json.tool`
 - [ ] No hardcoded paths — use `$HOME` or `~/` instead of `/Users/<username>/`
 - [ ] `CHANGELOG.md` updated for any user-visible changes
+- [ ] `VERSION` bumped if releasing
