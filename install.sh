@@ -91,6 +91,16 @@ else
   _fail "Could not copy /note skill"
 fi
 
+# Step 5b5: /wrap skill
+_step "Installing /wrap skill..."
+WRAP_SKILL_DIR="${CLAUDE_DIR}/skills/wrap"
+mkdir -p "${WRAP_SKILL_DIR}"
+if cp "${REPO_DIR}/skills/wrap/instructions.md" "${WRAP_SKILL_DIR}/instructions.md" 2>/dev/null; then
+  _ok "/wrap → ~/.claude/skills/wrap/"
+else
+  _fail "Could not copy /wrap skill"
+fi
+
 # Step 5b: MOC builder script
 _step "Installing theme MOC builder..."
 if cp "${REPO_DIR}/scripts/cast-journal-build-mocs.sh" "${SCRIPTS_DIR}/cast-journal-build-mocs.sh" 2>/dev/null; then
@@ -199,11 +209,11 @@ fi
 printf "\n${C_BOLD}══════════════════════════════════════${C_RESET}\n"
 printf "${C_GREEN}Claude's Journal v${CJ_VERSION} installed.${C_RESET}\n\n"
 printf "  Vault:    ~/Documents/Claude/\n"
-printf "  Hooks:    session-end reminder + session-start context injection (automatic)\n"
-printf "  Skill:    /reflect (on-demand)\n"
+printf "  Hooks:    Stop, SessionStart, UserPromptSubmit (automatic)\n"
+printf "  Skills:   /reflect (on-demand), /wrap (explicit session-end), /note (scratchpad)\n"
 printf "  Rules:    ~/.claude/rules/claudes_journal.md\n"
 printf "\n${C_BOLD}Next steps:${C_RESET}\n"
 printf "  1. Start a Claude Code session\n"
 printf "  2. Work normally — Claude will be reminded to journal at session end\n"
-printf "  3. Try /reflect for on-demand journaling\n"
+printf "  3. Try /reflect for on-demand journaling, /wrap to end explicitly, /note to log observations\n"
 printf "  4. Open ~/Documents/Claude/ in Obsidian to browse entries\n\n"

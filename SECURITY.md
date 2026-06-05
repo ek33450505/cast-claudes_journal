@@ -4,7 +4,9 @@
 
 | Version | Support Status |
 |---|---|
-| 0.1.x | Full support — security fixes backported |
+| 0.3.x | Full support — current release |
+| 0.2.x | Security fixes backported |
+| 0.1.x | No longer supported |
 | < 0.1 | No longer supported |
 
 ## Reporting a Vulnerability
@@ -15,7 +17,7 @@ Report privately using [GitHub Security Advisories](https://github.com/ek3345050
 
 ### What to Include
 
-- **Version** — output of `cat ~/Projects/personal/cast-claudes_journal/VERSION`
+- **Version** — output of `cat VERSION` (from the repo root) or `cat ~/.claude/claudes_journal/VERSION` if installed
 - **Operating system** — macOS version (e.g., `sw_vers`)
 - **Which file** — e.g., `install.sh`, `scripts/cast-journal-session-end.sh`
 - **Steps to reproduce** — minimal, clear reproduction steps
