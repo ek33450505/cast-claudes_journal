@@ -1,5 +1,11 @@
 # Claude's Journal Changelog
 
+## [0.3.1] — 2026-07-01
+
+### Changed
+- v9 ecosystem sync: version bump for the CAST v9 ecosystem consolidation.
+- Corrected the public description to reflect the full feature set — three hooks (Stop / SessionStart / UserPromptSubmit) and three skills (`/reflect`, `/wrap`, `/note`), not just `/reflect`.
+
 ## [0.3.0] — 2026-06-05
 
 ### Added
