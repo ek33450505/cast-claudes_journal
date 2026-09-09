@@ -6,6 +6,20 @@
 if [ "${CLAUDE_SUBPROCESS:-0}" = "1" ]; then exit 0; fi
 set -euo pipefail
 
+# This script uses associative arrays (declare -A), which are bash 4+. macOS
+# ships bash 3.2 as /bin/bash, where the line below dies with
+# "declare: -A: invalid option" — so prefer a newer bash if one is installed,
+# and degrade to a no-op rather than crashing when none is.
+if [ "${BASH_VERSINFO[0]:-0}" -lt 4 ]; then
+  for _alt in /opt/homebrew/bin/bash /usr/local/bin/bash; do
+    if [ -x "$_alt" ] && [ "$("$_alt" -c 'echo ${BASH_VERSINFO[0]}' 2>/dev/null || echo 0)" -ge 4 ]; then
+      exec "$_alt" "$0" "$@"
+    fi
+  done
+  echo "cast-journal-build-mocs: needs bash 4+ for associative arrays (found ${BASH_VERSION:-unknown}); skipping MOC rebuild" >&2
+  exit 0
+fi
+
 VAULT="${CAST_JOURNAL_VAULT:-$HOME/Documents/Claude}"
 THEMES_DIR="$VAULT/Themes"
 START_MARK='<!-- CAST-JOURNAL-AUTO-ENTRIES-START -->'
@@ -56,7 +70,13 @@ if [[ -f "$TEMP_THEMES" ]]; then
   done < "$TEMP_THEMES"
 fi
 
-for theme in "${!MOC_CONTENT[@]}"; do
+# `set +u` around the expansion only: an associative array with no elements
+# assigned is treated as unset, so this trips nounset on an empty vault —
+# which is every install until the first themed entry is written.
+set +u
+_MOC_THEMES=("${!MOC_CONTENT[@]}")
+set -u
+for theme in ${_MOC_THEMES+"${_MOC_THEMES[@]}"}; do
   moc_file="$THEMES_DIR/${theme}.md"
   entry_block="$START_MARK"$'\n'"${MOC_CONTENT[$theme]}"$'\n'"$END_MARK"
 
@@ -95,5 +115,8 @@ PYEOF
   fi
 done
 
+set +u
 theme_count="${#MOC_CONTENT[@]}"
+set -u
+theme_count="${theme_count:-0}"
 echo "MOC rebuild complete: $theme_count theme(s) in $THEMES_DIR"

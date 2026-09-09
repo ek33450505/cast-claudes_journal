@@ -31,3 +31,34 @@ jobs:
 
       - name: Install dry-run
         run: CI=true bash install.sh --yes
+
+  bats:
+    name: bats / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install BATS
+        run: |
+          if [[ "$RUNNER_OS" == "macOS" ]]; then
+            # bash 4+ as well as bats: macOS ships bash 3.2 as /bin/bash, which
+            # has no associative arrays. cast-journal-build-mocs.sh degrades to a
+            # no-op without one, so without this the MOC tests would exercise the
+            # degradation path instead of the feature.
+            brew install bats-core bash
+          else
+            sudo apt-get update && sudo apt-get install -y bats
+          fi
+      - name: Report shell versions
+        run: |
+          echo "  /bin/bash : $(/bin/bash --version | head -1)"
+          echo "  PATH bash : $(bash --version | head -1)"
+          echo "  bats      : $(bats --version)"
+      # No --jobs: several test files share literal $BATS_TMPDIR subpaths
+      # (vault/, home/), which is safe sequentially but would race in parallel.
+      - name: Run BATS
+        run: bats --print-output-on-failure tests/
