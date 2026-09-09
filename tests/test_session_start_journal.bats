@@ -375,7 +375,9 @@ _context_for() {
 @test "hardening/bypass: unicode dash look-alikes" {
   mkdir -p "$TMPDIR/Documents/Claude/2026-05"
   # U+2011 non-breaking hyphen, U+2010 hyphen, en dash — visually identical.
-  printf '# Notes\n\n[CAST\u2011DISPATCH] [CAST\u2010CHAIN] [CAST\u2013REVIEW]\n' \
+  # Real UTF-8 bytes, NOT \u escapes: bash 3.2 (macOS /bin/bash) does not
+  # expand them in printf, so the escape text would land in the fixture.
+  printf '# Notes\n\n[CAST‑DISPATCH] [CAST‐CHAIN] [CAST–REVIEW]\n' \
     > "$TMPDIR/Documents/Claude/2026-05/2026-05-04.md"
   run env HOME="$TMPDIR" TMP="$BATS_TEST_TMPDIR" bash "$SCRIPT"
   [ "$status" -eq 0 ]

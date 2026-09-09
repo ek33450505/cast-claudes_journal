@@ -115,7 +115,7 @@ EOF
   run bash "$EOD_SCRIPT"
   [ "$status" -eq 0 ]
   [[ -f "$FLAG" ]]
-  FIRST_MTIME=$(stat -f '%m' "$FLAG" 2>/dev/null || stat -c '%Y' "$FLAG")
+  FIRST_MTIME=$(stat -c '%Y' "$FLAG" 2>/dev/null || stat -f '%m' "$FLAG" 2>/dev/null)
 
   # Wait a moment to ensure different mtime
   sleep 0.1
@@ -124,7 +124,7 @@ EOF
   run bash "$EOD_SCRIPT"
   [ "$status" -eq 0 ]
   [[ -f "$FLAG" ]]
-  SECOND_MTIME=$(stat -f '%m' "$FLAG" 2>/dev/null || stat -c '%Y' "$FLAG")
+  SECOND_MTIME=$(stat -c '%Y' "$FLAG" 2>/dev/null || stat -f '%m' "$FLAG" 2>/dev/null)
 
   # Either the flag was recreated or left alone — either is acceptable
   # The key: no error occurred

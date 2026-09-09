@@ -142,7 +142,7 @@ Content.
 EOF
 
   # Get mtime before running script
-  MTIME_BEFORE=$(stat -f %m "$VAULT_DIR/2026-05/2026-05-01.md" 2>/dev/null || stat -c %Y "$VAULT_DIR/2026-05/2026-05-01.md" 2>/dev/null)
+  MTIME_BEFORE=$(stat -c %Y "$VAULT_DIR/2026-05/2026-05-01.md" 2>/dev/null || stat -f %m "$VAULT_DIR/2026-05/2026-05-01.md" 2>/dev/null)
 
   # Sleep to ensure time passes
   sleep 1
@@ -151,7 +151,7 @@ EOF
   [ "$status" -eq 0 ]
 
   # Get mtime after running script
-  MTIME_AFTER=$(stat -f %m "$VAULT_DIR/2026-05/2026-05-01.md" 2>/dev/null || stat -c %Y "$VAULT_DIR/2026-05/2026-05-01.md" 2>/dev/null)
+  MTIME_AFTER=$(stat -c %Y "$VAULT_DIR/2026-05/2026-05-01.md" 2>/dev/null || stat -f %m "$VAULT_DIR/2026-05/2026-05-01.md" 2>/dev/null)
 
   # mtimes should be equal (file not modified)
   [ "$MTIME_BEFORE" -eq "$MTIME_AFTER" ]
@@ -556,4 +556,15 @@ EOF
 
   # Verify the entry is still referenced
   [[ "$SECOND_OUTPUT" == *"- [[2026-05/2026-05-30.md]]"* ]]
+}
+
+# ---------------------------------------------------------------------------
+# Regression: an empty vault is every install until the first themed entry is
+# written. An associative array with no elements assigned counts as UNSET, so
+# `${!arr[@]}` / `${#arr[@]}` tripped `set -u` and the script died there.
+# ---------------------------------------------------------------------------
+@test "build-mocs: an empty vault reports 0 themes instead of crashing" {
+  run bash "$SCRIPT"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"0 theme(s)"* ]]
 }
