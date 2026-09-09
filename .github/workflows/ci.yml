@@ -31,3 +31,25 @@ jobs:
 
       - name: Install dry-run
         run: CI=true bash install.sh --yes
+
+  bats:
+    name: bats / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install BATS
+        run: |
+          if [[ "$RUNNER_OS" == "macOS" ]]; then
+            brew install bats-core
+          else
+            sudo apt-get update && sudo apt-get install -y bats
+          fi
+      # No --jobs: several test files share literal $BATS_TMPDIR subpaths
+      # (vault/, home/), which is safe sequentially but would race in parallel.
+      - name: Run BATS
+        run: bats --print-output-on-failure tests/

@@ -1,5 +1,48 @@
 # Claude's Journal Changelog
 
+## [0.4.0] — 2026-09-09
+
+Security release. The SessionStart hook replays a past journal entry into a new
+session's context; until now it did so with no sanitisation at all.
+
+### Security
+- **Prompt-injection hardening for replayed journal content.** Journal entries
+  are written by Claude, so an entry can contain anything Claude once reasoned
+  about — including CAST directive tokens and the fence tags used to mark the
+  content untrusted. Replaying that text unmodified is a self-inflicted
+  injection channel. Vault-derived text is now neutralised before injection:
+  - **Angle brackets are escaped.** This, not tag-name matching, is what closes
+    tag forgery: a name blacklist only covers the tags someone thought of, and
+    an entry is free to forge a *different* trusted wrapper. Escaping makes
+    every tag — present and future — inert text.
+  - **Dash look-alikes are normalised** (U+2010/2011/2012/2013/2014/2015/2212
+    and friends). A non-ASCII hyphen is visually identical to a reader but slips
+    straight past an ASCII-hyphen pattern.
+  - **Directive matching tolerates interior whitespace** (`[ CAST-DISPATCH ]`,
+    `[<newline>CAST-DISPATCH]`) and a name severed by the truncation cap.
+  - The excerpt is capped at 2000 chars and wrapped in a trust fence with a
+    preamble stating it is background data, not instructions.
+- **The predictions file is sanitised too.** `.predictions-due.md` is generated
+  FROM journal entries and carries the same vector.
+- Hook-authored notices (missed-entry, weekly nudge) stay OUTSIDE the fence:
+  this script writes them, and they are meant to be acted on.
+
+### Fixed
+- **An unreadable `.predictions-due.md` killed the hook.** `cat` was unguarded,
+  so under `set -euo pipefail` it exited non-zero and dropped the ENTIRE journal
+  injection rather than just the one optional section.
+- **A missing or unwritable `$TMP` killed the hook**, for the same reason: the
+  `touch` on the nudge flag was unguarded. `TMP_DIR` is now created, falls back
+  to `/tmp`, and the `touch` degrades.
+- The missed-entry notice contained a literal backslash-n (a double-quoted
+  escape is not a newline), which rendered as visible text.
+
+### Added
+- **CI now runs the test suite.** The repo had 9 BATS files and no job that ran
+  any of them; now on ubuntu and macOS.
+- 14 new tests, each mutation-verified. Every confirmed bypass of the previous
+  filter is kept as an explicit regression.
+
 ## [0.3.1] — 2026-07-01
 
 ### Changed
