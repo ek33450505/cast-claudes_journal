@@ -1,5 +1,17 @@
 # Claude's Journal Changelog
 
+## [0.4.1] — 2026-09-09
+
+### Fixed
+- **The 15:00 quiet-guard was bypassed at hours 08 and 09.** `date +%H`
+  zero-pads, and bash reads a leading zero as octal, so `[[ "09" -lt 15 ]]`
+  fails with *"value too great for base"*. Because that test sits inside an
+  `if`, the error evaluated as FALSE and the guard fell through — so the
+  end-of-day prompt fired mid-morning, on those two hours only.
+  `claude-agent-team` fixed this in `d30c5cf`; this package never carried the
+  fix, and it survived the v0.4.0 merge. Now normalised with `10#` at the
+  source, so every downstream comparison is base 10.
+
 ## [0.4.0] — 2026-09-09
 
 Security release. The SessionStart hook replays a past journal entry into a new
