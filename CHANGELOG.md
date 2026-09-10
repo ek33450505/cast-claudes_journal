@@ -1,5 +1,16 @@
 # Claude's Journal Changelog
 
+## [0.4.2] — 2026-09-09
+
+### Changed
+- Dropped an unreachable `python3` fallback when computing yesterday's date.
+  `date -v-1d` covers BSD/macOS and `date -d yesterday` covers GNU/Linux, so the
+  third fallback could never run on any supported platform — while adding a
+  fourth interpreter cold start to a SessionStart hook. If both somehow fail the
+  value is empty and the missed-entry notice is simply skipped, which is how the
+  rest of this hook degrades. Keeps the file byte-identical to
+  `claude-agent-team`, so a flagship reinstall cannot silently revert it.
+
 ## [0.4.1] — 2026-09-09
 
 ### Fixed
