@@ -358,3 +358,30 @@ DATEEOF
   # Empty scratchpad should NOT trigger the addendum
   [[ ! "$output" == *"scratchpad"* || "$output" == *"Do not"* ]]
 }
+
+# ---------------------------------------------------------------------------
+# Regression: `date +%H` zero-pads the hour. Bash reads a leading zero as octal,
+# so a bare "08"/"09" comparison dies with "value too great for base" — and
+# because the failing test sits in an `if`, the error read as FALSE and the
+# 15:00 quiet-guard was BYPASSED at exactly those two hours.
+# claude-agent-team fixed this (d30c5cf); this package never had the fix.
+# ---------------------------------------------------------------------------
+@test "session-end: zero-padded hours 08/09 are compared in base 10, not octal" {
+  SHIM="$BATS_TEST_TMPDIR/bin"
+  mkdir -p "$SHIM"
+  for h in 08 09; do
+    cat > "$SHIM/date" <<SHIMEOF
+#!/bin/bash
+# Stub only +%H; delegate everything else to the real date.
+if [ "\$1" = "+%H" ]; then echo "$h"; else exec /bin/date "\$@"; fi
+SHIMEOF
+    chmod +x "$SHIM/date"
+
+    run env PATH="$SHIM:$PATH" bash "$HOOK_SH" </dev/null
+    [ "$status" -eq 0 ]
+    # The arithmetic error must not surface...
+    [[ "$output" != *"value too great for base"* ]]
+    # ...and the quiet-guard must actually hold at 08/09, as it does at 07/10.
+    [ -z "$output" ]
+  done
+}

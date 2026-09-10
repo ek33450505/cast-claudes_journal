@@ -17,7 +17,9 @@ MONTH="$(date +%Y-%m)"
 MONTH_DIR="${VAULT_DIR}/${MONTH}"
 TODAY_NOTE="${MONTH_DIR}/${TODAY}.md"
 SCRATCH_FILE="${VAULT_DIR}/.scratch/${TODAY}.md"
-CURRENT_HOUR="$(date +%H)"
+# 10# forces base 10: `date +%H` zero-pads, and bash reads a leading zero as
+# octal, so a bare "08"/"09" comparison errors with "value too great for base".
+CURRENT_HOUR="$((10#$(date +%H)))"
 
 mkdir -p "$MONTH_DIR" 2>/dev/null
 
