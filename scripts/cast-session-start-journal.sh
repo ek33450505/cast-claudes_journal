@@ -43,7 +43,12 @@ BASENAME=$(basename "$LATEST_ENTRY")
 DATEONLY="${BASENAME%.md}"
 
 # Check for end-of-day missed entry flag (yesterday's missed entry)
-YESTERDAY="$(date -v-1d +%Y-%m-%d 2>/dev/null || date -d 'yesterday' +%Y-%m-%d 2>/dev/null || python3 -c "from datetime import datetime, timedelta; print((datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d'))" 2>/dev/null || echo "")"
+# `date -v-1d` is BSD (macOS), `date -d yesterday` is GNU (Linux) — between them
+# every platform this runs on is covered, so no interpreter fallback is needed.
+# Spawning python3 here would also be a fourth cold start in a SessionStart hook.
+# If both somehow fail, YESTERDAY is empty and the flag lookup below simply
+# misses, which degrades to "no missed-entry notice".
+YESTERDAY="$(date -v-1d +%Y-%m-%d 2>/dev/null || date -d 'yesterday' +%Y-%m-%d 2>/dev/null || echo "")"
 TMP_DIR="${TMP:-/tmp}"
 # The flag directory must exist and be writable, or `touch` below fails and
 # `set -e` kills the hook — losing the ENTIRE journal injection over a
